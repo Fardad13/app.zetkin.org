@@ -7,6 +7,9 @@ import {
   remoteItemUpdated,
   remoteList,
   RemoteList,
+  remoteListCreated,
+  remoteListLoad,
+  remoteListLoaded,
 } from 'utils/storeUtils';
 import { ZetkinTag, ZetkinTagGroup } from 'utils/types/zetkin';
 
@@ -28,21 +31,17 @@ const tagsSlice = createSlice({
   reducers: {
     personTagsLoad: (state, action: PayloadAction<number>) => {
       const id = action.payload;
-      if (!state.tagsByPersonId[id]) {
-        state.tagsByPersonId[id] = remoteList();
-      }
-      state.tagsByPersonId[id].isLoading = true;
+      state.tagsByPersonId[id] = remoteListLoad(state.tagsByPersonId[id]);
     },
     personTagsLoaded: (state, action: PayloadAction<[number, ZetkinTag[]]>) => {
       const [id, tags] = action.payload;
-      state.tagsByPersonId[id] = remoteList(tags);
-      state.tagsByPersonId[id].loaded = new Date().toISOString();
+      state.tagsByPersonId[id] = remoteListLoaded(tags);
     },
     tagAssigned: (state, action: PayloadAction<[number, ZetkinTag]>) => {
       const [personId, tag] = action.payload;
-      if (!state.tagsByPersonId[personId]) {
-        state.tagsByPersonId[personId] = remoteList();
-      }
+      state.tagsByPersonId[personId] ||= remoteListCreated(
+        state.tagsByPersonId[personId]
+      );
       remoteItemUpdated(state.tagsByPersonId[personId], tag);
     },
     tagCreate: (state) => {
@@ -75,15 +74,11 @@ const tagsSlice = createSlice({
       remoteItemUpdated(state.tagGroupList, tagGroup);
     },
     tagGroupsLoad: (state) => {
-      state.tagGroupList.isLoading = true;
+      state.tagGroupList = remoteListLoad(state.tagGroupList);
     },
     tagGroupsLoaded: (state, action: PayloadAction<ZetkinTagGroup[]>) => {
       const tagGroups = action.payload;
-      const timestamp = new Date().toISOString();
-
-      state.tagGroupList = remoteList(tagGroups);
-      state.tagGroupList.loaded = timestamp;
-      state.tagGroupList.items.forEach((item) => (item.loaded = timestamp));
+      state.tagGroupList = remoteListLoaded(tagGroups);
     },
     tagLoad: (state, action: PayloadAction<number>) => {
       const tagId = action.payload;
@@ -95,9 +90,8 @@ const tagsSlice = createSlice({
     },
     tagUnassigned: (state, action: PayloadAction<[number, number]>) => {
       const [personId, tagId] = action.payload;
-      const tagsByPersonId = state.tagsByPersonId[personId];
 
-      if (!tagsByPersonId) {
+      if (!state.tagsByPersonId[personId]) {
         return;
       }
 
@@ -121,15 +115,11 @@ const tagsSlice = createSlice({
       });
     },
     tagsLoad: (state) => {
-      state.tagList.isLoading = true;
+      state.tagList = remoteListLoad(state.tagList);
     },
     tagsLoaded: (state, action: PayloadAction<ZetkinTag[]>) => {
       const tags = action.payload;
-      const timestamp = new Date().toISOString();
-
-      state.tagList = remoteList(tags);
-      state.tagList.loaded = timestamp;
-      state.tagList.items.forEach((item) => (item.loaded = timestamp));
+      state.tagList = remoteListLoaded(tags);
     },
   },
 });
