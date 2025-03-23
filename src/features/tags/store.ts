@@ -70,7 +70,6 @@ const tagsSlice = createSlice({
     },
     tagGroupCreated: (state, action: PayloadAction<ZetkinTagGroup>) => {
       const tagGroup = action.payload;
-      state.tagGroupList.isLoading = false;
       remoteItemUpdated(state.tagGroupList, tagGroup);
     },
     tagGroupsLoad: (state) => {
